@@ -58,8 +58,6 @@ class Chef
     include Chef::Mixin::ShellOut
     include Chef::Mixin::PowershellOut
 
-    NULL_ARG = Object.new
-
     #
     # The node the current Chef run is using.
     #
@@ -769,10 +767,10 @@ class Chef
     # @example With type and options
     #   property :x, String, default: 'hi'
     #
-    def self.property(name, type=NULL_ARG, **options)
+    def self.property(name, type=NOT_PASSED, **options)
       name = name.to_sym
 
-      if type != NULL_ARG
+      if type != NOT_PASSED
         if options[:is]
           options[:is] = ([ type ] + [ options[:is] ]).flatten(1)
         else
@@ -780,7 +778,7 @@ class Chef
         end
       end
 
-      define_method(name) do |value=nil|
+      define_method(name) do |value=NOT_PASSED|
         set_or_return(name, value, options)
       end
       define_method("#{name}=") do |value|
@@ -864,8 +862,8 @@ class Chef
     #   have.
     #
     attr_accessor :allowed_actions
-    def allowed_actions(value=NULL_ARG)
-      if value != NULL_ARG
+    def allowed_actions(value=NOT_PASSED)
+      if value != NOT_PASSED
         self.allowed_actions = value
       end
       @allowed_actions
@@ -999,9 +997,9 @@ class Chef
     #
     # @return [Symbol] The name of this resource type (e.g. `:execute`).
     #
-    def self.resource_name(name=NULL_ARG)
+    def self.resource_name(name=NOT_PASSED)
       # Setter
-      if name != NULL_ARG
+      if name != NOT_PASSED
         remove_canonical_dsl
 
         # Set the resource_name and call provides
@@ -1084,8 +1082,8 @@ class Chef
     #
     # @return [Symbol,Array<Symbol>] The default actions for the resource.
     #
-    def self.default_action(action_name=NULL_ARG)
-      unless action_name.equal?(NULL_ARG)
+    def self.default_action(action_name=NOT_PASSED)
+      unless action_name.equal?(NOT_PASSED)
         if action_name.is_a?(Array)
           @default_action = action_name.map { |arg| arg.to_sym }
         else
