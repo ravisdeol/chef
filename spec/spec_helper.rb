@@ -190,6 +190,27 @@ RSpec.configure do |config|
   end
 end
 
+require 'ruby-prof'
+
+RSpec.configure do |c|
+  def profile(example)
+    result = RubyProf.profile { yield }
+    name = example.metadata[:full_description].downcase.gsub(/[^a-z0-9_-]/, "-").gsub(/-+/, "-")
+    printer = RubyProf::CallTreePrinter.new(result)
+    open("/Users/jkeiser/src/chef/profiles/callgrind.#{name}.#{Time.now.to_i}.trace", "w") do |f|
+      printer.print(f)
+    end
+  end
+
+  c.around(:each) do |example|
+    if ENV['PROFILE'] == 'all' or (example.metadata[:profile] and ENV['PROFILE'])
+      profile(example) { example.run }
+    else
+      example.run
+    end
+  end
+end
+
 require 'webrick/utils'
 
 #    Webrick uses a centralized/synchronized timeout manager. It works by

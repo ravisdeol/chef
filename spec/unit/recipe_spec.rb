@@ -22,7 +22,7 @@
 require 'spec_helper'
 require 'chef/platform/resource_priority_map'
 
-describe Chef::Recipe do
+describe Chef::Recipe, :profile do
 
   let(:cookbook_repo) { File.expand_path(File.join(File.dirname(__FILE__), "..", "data", "cookbooks")) }
 
