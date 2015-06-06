@@ -35,27 +35,8 @@ class Chef
       default_action :create
       allowed_actions :create, :delete
 
-      def initialize(name, run_context=nil)
-        super
-        @path = name
-        @recursive = false
-      end
-
-      def recursive(arg=nil)
-        set_or_return(
-          :recursive,
-          arg,
-          :kind_of => [ TrueClass, FalseClass ]
-        )
-      end
-
-      def path(arg=nil)
-        set_or_return(
-          :path,
-          arg,
-          :kind_of => String
-        )
-      end
+      attribute :path, String, name_property: true
+      attribute :recursive, [ true, false ], default: false
 
     end
   end

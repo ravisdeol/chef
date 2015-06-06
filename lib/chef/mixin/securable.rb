@@ -16,48 +16,31 @@
 # limitations under the License.
 #
 
+require 'chef/mixin/property'
+
 class Chef
   module Mixin
     module Securable
 
-      def owner(arg=nil)
-        set_or_return(
-          :owner,
-          arg,
-          :regex => Chef::Config[:user_valid_regex]
-        )
-      end
+      include Chef::Mixin::Property
 
+      property :owner, Chef::Config[:user_valid_regex]
       alias :user :owner
+      property :group, Chef::Config[:group_valid_regex]
+      property :mode, callbacks: {
+        "not in valid numeric range" => lambda { |m|
+          if m.kind_of?(String)
+            m =~ /^0/ || m="0#{m}"
+          end
 
-      def group(arg=nil)
-        set_or_return(
-          :group,
-          arg,
-          :regex => Chef::Config[:group_valid_regex]
-        )
-      end
-
-      def mode(arg=nil)
-        set_or_return(
-          :mode,
-          arg,
-          :callbacks => {
-            "not in valid numeric range" => lambda { |m|
-              if m.kind_of?(String)
-                m =~ /^0/ || m="0#{m}"
-              end
-
-              # Windows does not support the sticky or setuid bits
-              if Chef::Platform.windows?
-                Integer(m)<=0777 && Integer(m)>=0
-              else
-                Integer(m)<=07777 && Integer(m)>=0
-              end
-            },
-          }
-        )
-      end
+          # Windows does not support the sticky or setuid bits
+          if Chef::Platform.windows?
+            Integer(m)<=0777 && Integer(m)>=0
+          else
+            Integer(m)<=07777 && Integer(m)>=0
+          end
+        }
+      }
 
 
       #==WindowsMacros
@@ -109,9 +92,7 @@ class Chef
         #
         def rights_attribute(name)
 
-          # equivalent to something like:
-          # def rights(permissions=nil, principals=nil, args_hash=nil)
-          define_method(name) do |permissions=nil, principals=nil, args_hash=nil|
+          property name, coerce: proc |permissions=nil, principals=nil, args_hash=nil|
             rights = self.instance_variable_get("@#{name.to_s}".to_sym)
             unless permissions.nil?
               input = {
@@ -155,11 +136,7 @@ class Chef
               rights ||= []
               rights << input
             end
-            set_or_return(
-              name,
-              rights,
-              {}
-            )
+            rights
           end
         end
       end
@@ -168,15 +145,8 @@ class Chef
       # Defines #inherits to describe Windows file security ACLs on the
       # including class
       module WindowsSecurableAttributes
-
-
-        def inherits(arg=nil)
-          set_or_return(
-            :inherits,
-            arg,
-            :kind_of => [ TrueClass, FalseClass ]
-          )
-        end
+        include Chef::Mixin::Property
+        property :inherits, [ true, false]
       end
 
       if RUBY_PLATFORM =~ /mswin|mingw|windows/
