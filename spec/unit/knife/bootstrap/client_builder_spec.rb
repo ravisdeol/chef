@@ -168,11 +168,48 @@ describe Chef::Knife::Bootstrap::ClientBuilder do
       client_builder.run
     end
 
-    it "builds a node with an environment if its given" do
-      knife_config[:environment] = "production"
-      expect(node).to receive(:environment).with("production")
-      expect(node).to receive(:run_list).with([])
-      client_builder.run
+    shared_examples "environment" do
+      let(:environment) { "production" }
+
+      it "builds a node with an environment" do
+        expect(node).to receive(:environment).with(environment)
+        expect(node).to receive(:run_list).with([])
+        client_builder.run
+      end
     end
+
+    context "with an environment specified in the chef config" do
+      include_examples "environment" do
+        before(:each) do
+          chef_config[:environment] = environment
+        end
+      end
+    end
+
+    context "with an environment specified in first_boot_attributes" do
+      include_examples "environment" do
+        let(:first_boot_attributes) { {environment: environment} }
+
+        before(:each) do
+          chef_config[:environment] = environment + "_chefconfig"
+          knife_config[:first_boot_attributes] = first_boot_attributes
+          allow(node).to receive(:normal_attrs=).with(first_boot_attributes)
+        end
+      end
+    end
+
+    context "with an environment specified as a cli option" do
+      include_examples "environment" do
+        let(:first_boot_attributes) { {environment: environment + "_firstboot"} }
+
+        before(:each) do
+          chef_config[:environment] = environment + "_chefconfig"
+          knife_config[:environment] = environment
+          knife_config[:first_boot_attributes] = first_boot_attributes
+          allow(node).to receive(:normal_attrs=).with(first_boot_attributes)
+        end
+      end
+    end
+
   end
 end
