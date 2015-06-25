@@ -189,4 +189,5 @@ The specific components of Chef related to a given platform - including (but not
 ### Maintainers
 
 * [Lamont Granquist](https://github.com/lamont-granquist)
+* [Ryan Cragun](https://github.com/ryancragun)
 
